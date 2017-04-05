@@ -1,0 +1,6 @@
+/vendor
+/build
+.buildpath
+.project
+.settings
+/tags
