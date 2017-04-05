@@ -1,6 +1,6 @@
 <?php
 
-namespace Honeybee\CouchDb\StructureVersionList;
+namespace Honeybee\CouchDb\Storage\StructureVersionList;
 
 use Assert\Assertion;
 use GuzzleHttp\Exception\RequestException;

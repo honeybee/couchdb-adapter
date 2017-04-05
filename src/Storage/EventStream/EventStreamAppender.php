@@ -1,6 +1,6 @@
 <?php
 
-namespace Honeybee\CouchDb\EventStream;
+namespace Honeybee\CouchDb\Storage\EventStream;
 
 use Honeybee\Common\Error\RuntimeError;
 use Honeybee\CouchDb\Storage\CouchDbStorage;
