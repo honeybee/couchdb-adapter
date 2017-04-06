@@ -12,32 +12,32 @@ use Honeybee\Infrastructure\Migration\StructureVersionList;
 
 class StructureVersionListWriter extends CouchDbStorage implements StorageWriterInterface
 {
-    public function write($structure_version_list, SettingsInterface $settings = null)
+    public function write($structureVersionList, SettingsInterface $settings = null)
     {
-        Assertion::isInstanceOf($structure_version_list, StructureVersionList::CLASS);
+        Assertion::isInstanceOf($structureVersionList, StructureVersionList::CLASS);
 
         $data = [
-            'identifier' => $structure_version_list->getIdentifier(),
-            'versions' => $structure_version_list->toArray()
+            'identifier' => $structureVersionList->getIdentifier(),
+            'versions' => $structureVersionList->toArray()
         ];
 
         try {
             // @todo use head method to get current revision?
             $response = $this->request($data['identifier'], self::METHOD_GET);
-            $structure_version = json_decode($response->getBody(), true);
-            $data['revision'] = $structure_version['_rev'];
+            $structureVersion = json_decode($response->getBody(), true);
+            $data['revision'] = $structureVersion['_rev'];
         } catch (RequestException $error) {
             error_log(__METHOD__ . ' - ' . $error->getMessage());
         }
 
         try {
             $response = $this->request($data['identifier'], self::METHOD_PUT, $data);
-            $response_data = json_decode($response->getBody(), true);
+            $responseData = json_decode($response->getBody(), true);
         } catch (RequestException $error) {
             error_log(__METHOD__ . ' - ' . $error->getMessage());
         }
 
-        if (!isset($response_data['ok']) || !isset($response_data['rev'])) {
+        if (!isset($responseData['ok']) || !isset($responseData['rev'])) {
             throw new RuntimeError('Failed to write data.');
         }
     }
@@ -46,8 +46,8 @@ class StructureVersionListWriter extends CouchDbStorage implements StorageWriter
     {
         try {
             $response = $this->request($identifier, self::METHOD_GET);
-            $structure_version = json_decode($response->getBody(), true);
-            $data['revision'] = $structure_version['_rev'];
+            $structureVersion = json_decode($response->getBody(), true);
+            $data['revision'] = $structureVersion['_rev'];
             $this->request($identifier, self::METHOD_DELETE, [], $data);
         } catch (RequestException $error) {
             error_log(__METHOD__ . ' - ' . $error->getMessage());

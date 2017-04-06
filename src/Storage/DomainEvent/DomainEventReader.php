@@ -12,14 +12,14 @@ use Honeybee\Infrastructure\DataAccess\Storage\StorageReaderIterator;
 
 class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
 {
-    protected $last_key = null;
+    protected $lastKey = null;
 
     public function read($identifier, SettingsInterface $settings = null)
     {
         try {
             $path = sprintf('/%s', $identifier);
             $response = $this->request($path, self::METHOD_GET);
-            $result_data = json_decode($response->getBody(), true);
+            $resultData = json_decode($response->getBody(), true);
         } catch (RequestException $error) {
             if ($error->getResponse()->getStatusCode() === 404) {
                 return null;
@@ -28,7 +28,7 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
             }
         }
 
-        return $this->createDomainEvent($result_data['doc']);
+        return $this->createDomainEvent($resultData['doc']);
     }
 
     public function readAll(SettingsInterface $settings = null)
@@ -36,18 +36,18 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
         $settings = $settings ?: new Settings;
 
         if ($settings->get('first', true)) {
-            $this->last_key = null;
+            $this->lastKey = null;
         }
 
-        $view_params = [
+        $viewParams = [
             'include_docs' => 'true',
             'reduce' => 'false',
             'limit' => $this->config->get('limit', 100)
         ];
 
-        if ($this->last_key) {
-            $view_params['skip'] = 1;
-            $view_params['startkey'] = sprintf('"%s"', $this->last_key);
+        if ($this->lastKey) {
+            $viewParams['skip'] = 1;
+            $viewParams['startkey'] = sprintf('"%s"', $this->lastKey);
         }
 
         if (!$this->config->has('design_doc')) {
@@ -56,18 +56,18 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
                 'that is expected to contain the event_stream view.'
             );
         }
-        $view_path = sprintf(
+        $viewPath = sprintf(
             '/_design/%s/_view/%s',
             $this->config->get('design_doc'),
             $this->config->get('view_name', 'events_by_timestamp')
         );
-        $response = $this->request($view_path, self::METHOD_GET, [], $view_params);
-        $result_data = json_decode($response->getBody(), true);
+        $response = $this->request($viewPath, self::METHOD_GET, [], $viewParams);
+        $resultData = json_decode($response->getBody(), true);
 
         $events = [];
-        foreach ($result_data['rows'] as $event_data) {
-            $events[] = $this->createDomainEvent($event_data['doc']);
-            $this->last_key = $event_data['doc']['iso_date'];
+        foreach ($resultData['rows'] as $eventData) {
+            $events[] = $this->createDomainEvent($eventData['doc']);
+            $this->lastKey = $eventData['doc']['iso_date'];
         }
 
         return $events;
@@ -78,12 +78,12 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
         return new StorageReaderIterator($this);
     }
 
-    protected function createDomainEvent(array $event_data)
+    protected function createDomainEvent(array $eventData)
     {
-        if (!isset($event_data[self::OBJECT_TYPE])) {
+        if (!isset($eventData[self::OBJECT_TYPE])) {
             throw new RuntimeError('Missing type key within event data.');
         }
 
-        return new $event_data[self::OBJECT_TYPE]($event_data);
+        return new $eventData[self::OBJECT_TYPE]($eventData);
     }
 }

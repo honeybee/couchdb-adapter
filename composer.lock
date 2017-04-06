@@ -510,12 +510,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/honeybee/honeybee.git",
-                "reference": "12bc108ca7e6cdde98e2543b40f152efe110dfb5"
+                "reference": "bef8b52d7164538f3ab3524665ce73644e59dd70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/honeybee/honeybee/zipball/12bc108ca7e6cdde98e2543b40f152efe110dfb5",
-                "reference": "12bc108ca7e6cdde98e2543b40f152efe110dfb5",
+                "url": "https://api.github.com/repos/honeybee/honeybee/zipball/bef8b52d7164538f3ab3524665ce73644e59dd70",
+                "reference": "bef8b52d7164538f3ab3524665ce73644e59dd70",
                 "shasum": ""
             },
             "require": {
@@ -592,7 +592,7 @@
                 "hexagonal",
                 "messaging"
             ],
-            "time": "2017-04-05 18:31:13"
+            "time": "2017-04-05 23:27:55"
         },
         {
             "name": "honeybee/trellis",
@@ -2939,7 +2939,7 @@
                 "github",
                 "test"
             ],
-            "time": "2017-03-31T10:12:47+00:00"
+            "time": "2017-03-31 10:12:47"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",

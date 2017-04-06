@@ -19,9 +19,9 @@ class CouchDbConnector extends Connector
      */
     protected function connect()
     {
-        $base_uri = $this->config->get('base_uri');
+        $baseUri = $this->config->get('base_uri');
         if ($this->config->has('transport') && $this->config->has('host') && $this->config->has('port')) {
-            $base_uri = sprintf(
+            $baseUri = sprintf(
                 '%s://%s:%s',
                 $this->config->get('transport'),
                 $this->config->get('host'),
@@ -29,16 +29,16 @@ class CouchDbConnector extends Connector
             );
         }
 
-        $client_options = [ 'base_uri' => $base_uri ];
+        $clientOptions = ['base_uri' => $baseUri];
 
         if ($this->config->get('debug', false)) {
-            $client_options['debug'] = true;
+            $clientOptions['debug'] = true;
         }
 
         if ($this->config->has('auth')) {
             $auth = (array)$this->config->get('auth');
             if (!empty($auth['username']) && !empty($auth['password'])) {
-                $client_options['auth'] = [
+                $clientOptions['auth'] = [
                     $auth['username'],
                     $auth['password'],
                     isset($auth['type']) ? $auth['type'] : 'basic'
@@ -47,11 +47,11 @@ class CouchDbConnector extends Connector
         }
 
         if ($this->config->has('default_headers')) {
-            $client_options['headers'] = (array)$this->config->get('default_headers');
+            $clientOptions['headers'] = (array)$this->config->get('default_headers');
         }
 
         if ($this->config->has('default_options')) {
-            $client_options = array_merge($client_options, (array)$this->config->get('default_options')->toArray());
+            $clientOptions = array_merge($clientOptions, (array)$this->config->get('default_options')->toArray());
         }
 
         if ($this->config->has('default_query')) {
@@ -65,10 +65,10 @@ class CouchDbConnector extends Connector
                     return $request->withUri($uri);
                 }
             ));
-            $client_options['handler'] = $handler;
+            $clientOptions['handler'] = $handler;
         }
 
-        return new Client($client_options);
+        return new Client($clientOptions);
     }
 
     /**
@@ -83,7 +83,7 @@ class CouchDbConnector extends Connector
         }
 
         if (!$this->config->has('status_test')) {
-            return Status::unknown($this, [ 'message' => 'No status_test path specified' ]);
+            return Status::unknown($this, ['message' => 'No status_test path specified']);
         }
 
         $path = $this->config->get('status_test');
@@ -102,16 +102,16 @@ class CouchDbConnector extends Connector
                     if ($stats->hasResponse()) {
                         $info['status_code'] = $stats->getResponse()->getStatusCode();
                     } else {
-                        $error_data = $stats->getHandlerErrorData();
-                        if (is_array($error_data) || is_string($error_data)) {
-                            $info['handler_error_data'] = $error_data;
+                        $errorData = $stats->getHandlerErrorData();
+                        if (is_array($errorData) || is_string($errorData)) {
+                            $info['handler_error_data'] = $errorData;
                         }
                     }
                 }
             ]);
 
-            $status_code = $response->getStatusCode();
-            if ($status_code >= 200 && $status_code < 300) {
+            $statusCode = $response->getStatusCode();
+            if ($statusCode >= 200 && $statusCode < 300) {
                 $msg['message'] = 'GET succeeded: ' . $path;
                 if (!empty($info)) {
                     $msg['info'] = $info;
@@ -131,7 +131,7 @@ class CouchDbConnector extends Connector
             error_log(
                 '[' . static::CLASS . '] Error on "' . $path . '": ' . $e->getMessage() . "\n" . $e->getTraceAsString()
             );
-            return Status::failing($this, [ 'message' => 'Error on "' . $path . '": ' . $e->getMessage() ]);
+            return Status::failing($this, ['message' => 'Error on "' . $path . '": ' . $e->getMessage()]);
         }
     }
 }

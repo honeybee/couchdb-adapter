@@ -15,7 +15,7 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
 {
     const READ_ALL_LIMIT = 10;
 
-    protected $next_start_key = null;
+    protected $nextStartKey = null;
 
     public function readAll(SettingsInterface $settings = null)
     {
@@ -23,33 +23,33 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
 
         $data = [];
 
-        $default_limit = $this->config->get('limit', self::READ_ALL_LIMIT);
-        $request_params = [
+        $defaultLimit = $this->config->get('limit', self::READ_ALL_LIMIT);
+        $requestParams = [
             'include_docs' => 'true',
-            'limit' => $settings->get('limit', $default_limit)
+            'limit' => $settings->get('limit', $defaultLimit)
         ];
 
         if (!$settings->get('first', true)) {
-            if (!$this->next_start_key) {
+            if (!$this->nextStartKey) {
                 return $data;
             }
 
-            $request_params['startkey'] = sprintf('"%s"', $this->next_start_key);
-            $request_params['skip'] = 1;
+            $requestParams['startkey'] = sprintf('"%s"', $this->nextStartKey);
+            $requestParams['skip'] = 1;
         }
 
-        $response = $this->request('_all_docs', self::METHOD_GET, [], $request_params);
-        $result_data = json_decode($response->getBody(), true);
+        $response = $this->request('_all_docs', self::METHOD_GET, [], $requestParams);
+        $resultData = json_decode($response->getBody(), true);
 
-        foreach ($result_data['rows'] as $row) {
+        foreach ($resultData['rows'] as $row) {
             $data[] = $this->createStructureVersionList($row);
         }
 
-        if ($result_data['total_rows'] === $result_data['offset'] + 1) {
-            $this->next_start_key = null;
+        if ($resultData['total_rows'] === $resultData['offset'] + 1) {
+            $this->nextStartKey = null;
         } else {
-            $last_row = end($data);
-            $this->next_start_key = $last_row[self::DOMAIN_FIELD_ID];
+            $lastRow = end($data);
+            $this->nextStartKey = $lastRow[self::DOMAIN_FIELD_ID];
         }
 
         return $data;
@@ -59,7 +59,7 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
     {
         try {
             $response = $this->request($identifier, self::METHOD_GET);
-            $result_data = json_decode($response->getBody(), true);
+            $resultData = json_decode($response->getBody(), true);
         } catch (RequestException $error) {
             if ($error->getResponse()->getStatusCode() === 404) {
                 return null;
@@ -68,9 +68,9 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
             }
         }
 
-        $result_data['revision'] = $result_data['_rev'];
+        $resultData['revision'] = $resultData['_rev'];
 
-        return $this->createStructureVersionList($result_data);
+        return $this->createStructureVersionList($resultData);
     }
 
     public function getIterator()
@@ -80,12 +80,12 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
 
     protected function createStructureVersionList(array $data)
     {
-        $structure_version_list = new StructureVersionList($data['_id']);
+        $structureVersionList = new StructureVersionList($data['_id']);
 
-        foreach ($data['versions'] as $version_data) {
-            $structure_version_list->push(new StructureVersion($version_data));
+        foreach ($data['versions'] as $versionData) {
+            $structureVersionList->push(new StructureVersion($versionData));
         }
 
-        return $structure_version_list;
+        return $structureVersionList;
     }
 }

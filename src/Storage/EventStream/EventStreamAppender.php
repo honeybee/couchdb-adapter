@@ -10,9 +10,9 @@ use Honeybee\Infrastructure\DataAccess\Storage\StorageWriterInterface;
 
 class EventStreamAppender extends CouchDbStorage implements StorageWriterInterface
 {
-    public function write($domain_event, SettingsInterface $settings = null)
+    public function write($domainEvent, SettingsInterface $settings = null)
     {
-        if (!$domain_event instanceof AggregateRootEventInterface) {
+        if (!$domainEvent instanceof AggregateRootEventInterface) {
             throw new RuntimeError(
                 sprintf(
                     'Invalid payload given to %s, expected type of %s',
@@ -22,12 +22,12 @@ class EventStreamAppender extends CouchDbStorage implements StorageWriterInterfa
             );
         }
 
-        $data = $domain_event->toArray();
-        $identifier = sprintf('%s-%s', $domain_event->getAggregateRootIdentifier(), $domain_event->getSeqNumber());
+        $data = $domainEvent->toArray();
+        $identifier = sprintf('%s-%s', $domainEvent->getAggregateRootIdentifier(), $domainEvent->getSeqNumber());
         $response = $this->request($identifier, self::METHOD_PUT, $data);
-        $response_data = json_decode($response->getBody(), true);
+        $responseData = json_decode($response->getBody(), true);
 
-        if (!isset($response_data['ok']) || !isset($response_data['rev'])) {
+        if (!isset($responseData['ok']) || !isset($responseData['rev'])) {
             throw new RuntimeError("Failed to write data.");
         }
     }

@@ -18,14 +18,14 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
 
     const ENDKEY_FILTER = '["%s", 1]';
 
-    protected $next_identifier = null;
+    protected $nextIdentifier = null;
 
-    protected $identifier_list;
+    protected $identifierList;
 
     public function read($identifier, SettingsInterface $settings = null)
     {
         try {
-            $view_params = [
+            $viewParams = [
                 'startkey' => sprintf(self::STARTKEY_FILTER, $identifier),
                 'endkey' => sprintf(self::ENDKEY_FILTER, $identifier),
                 'include_docs' => 'true',
@@ -39,13 +39,13 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
                     'that is expected to contain the event_stream view.'
                 );
             }
-            $view_path = sprintf(
+            $viewPath = sprintf(
                 '/_design/%s/_view/%s',
                 $this->config->get('design_doc'),
                 $this->config->get('view_name', 'event_stream')
             );
-            $response = $this->request($view_path, self::METHOD_GET, [], $view_params);
-            $result_data = json_decode($response->getBody(), true);
+            $response = $this->request($viewPath, self::METHOD_GET, [], $viewParams);
+            $resultData = json_decode($response->getBody(), true);
         } catch (RequestException $error) {
             if ($error->getResponse()->getStatusCode() === 404) {
                 return null;
@@ -54,8 +54,8 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
             }
         }
 
-        if ($result_data['total_rows'] > 0) {
-            return $this->createEventStream($identifier, array_reverse($result_data['rows']));
+        if ($resultData['total_rows'] > 0) {
+            return $this->createEventStream($identifier, array_reverse($resultData['rows']));
         }
 
         return null;
@@ -66,16 +66,16 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
         $settings = $settings ?: new Settings;
 
         if ($settings->get('first', true)) {
-            $this->identifier_list = $this->fetchEventStreamIdentifiers();
+            $this->identifierList = $this->fetchEventStreamIdentifiers();
         }
-        $this->next_identifier = key($this->identifier_list);
-        next($this->identifier_list);
+        $this->nextIdentifier = key($this->identifierList);
+        next($this->identifierList);
 
-        if (!$this->next_identifier) {
+        if (!$this->nextIdentifier) {
             return [];
         }
 
-        return [ $this->read($this->next_identifier, $settings) ];
+        return [$this->read($this->nextIdentifier, $settings)];
     }
 
     public function getIterator()
@@ -83,16 +83,16 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
         return new StorageReaderIterator($this);
     }
 
-    protected function createEventStream($identifier, array $event_stream_data)
+    protected function createEventStream($identifier, array $eventStreamData)
     {
         $events = new AggregateRootEventList;
-        foreach ($event_stream_data as $event_data) {
-            $event_data = $event_data['doc'];
-            if (!isset($event_data[self::OBJECT_TYPE])) {
+        foreach ($eventStreamData as $eventData) {
+            $eventData = $eventData['doc'];
+            if (!isset($eventData[self::OBJECT_TYPE])) {
                 throw new RuntimeError("Missing type key within event data.");
             }
-            $event_class = $event_data[self::OBJECT_TYPE];
-            $events->addItem(new $event_class($event_data));
+            $eventClass = $eventData[self::OBJECT_TYPE];
+            $events->addItem(new $eventClass($eventData));
         }
         $data['identifier'] = $identifier;
         $data['events'] = $events;
@@ -102,10 +102,10 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
 
     protected function fetchEventStreamIdentifiers()
     {
-        $event_stream_keys = [];
-        $view_name = sprintf('/_design/default_views/_view/%s', $this->config->get('view_name'));
+        $eventStreamKeys = [];
+        $viewName = sprintf('/_design/default_views/_view/%s', $this->config->get('view_name'));
 
-        $request_params = [
+        $requestParams = [
             'group' => 'true',
             'group_level' => 1,
             'reduce' => 'true'
@@ -115,14 +115,14 @@ class EventStreamReader extends CouchDbStorage implements StorageReaderInterface
             sprintf('/_design/default_views/_view/%s', $this->config->get('view_name')),
             self::METHOD_GET,
             [],
-            $request_params
+            $requestParams
         );
-        $result_data = json_decode($response->getBody(), true);
+        $resultData = json_decode($response->getBody(), true);
 
-        foreach ($result_data['rows'] as $row) {
-            $event_stream_keys[$row['key'][0]] = $row['value'];
+        foreach ($resultData['rows'] as $row) {
+            $eventStreamKeys[$row['key'][0]] = $row['value'];
         }
 
-        return $event_stream_keys;
+        return $eventStreamKeys;
     }
 }

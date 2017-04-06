@@ -17,49 +17,49 @@ abstract class CouchDbMigration extends Migration
 
     abstract protected function getDesignDocName();
 
-    protected function createDatabaseIfNotExists(MigrationTargetInterface $migration_target, $update_views = false)
+    protected function createDatabaseIfNotExists(MigrationTargetInterface $migrationTarget, $updateViews = false)
     {
-        if (!$this->databaseExists($migration_target)) {
-            $this->createDatabase($migration_target, $update_views);
-        } elseif ($update_views) {
-            $this->updateDesignDoc($migration_target);
+        if (!$this->databaseExists($migrationTarget)) {
+            $this->createDatabase($migrationTarget, $updateViews);
+        } elseif ($updateViews) {
+            $this->updateDesignDoc($migrationTarget);
         }
     }
 
-    protected function createDatabase(MigrationTargetInterface $migration_target, $update_views = false)
+    protected function createDatabase(MigrationTargetInterface $migrationTarget, $updateViews = false)
     {
         try {
-            $client = $this->getConnection($migration_target);
-            $database_name = $this->getDatabaseName($migration_target);
-            $response = $client->put('/' . $database_name);
+            $client = $this->getConnection($migrationTarget);
+            $databaseName = $this->getDatabaseName($migrationTarget);
+            $response = $client->put('/' . $databaseName);
             if ($response->getStatusCode() !== 201) {
                 throw new RuntimeError(
                     'Failed to create couchdb database %s. Received status %s along with this data: %s',
-                    $database_name,
+                    $databaseName,
                     $response->getStatusCode(),
                     print_r(json_decode($response->getBody(), true), true)
                 );
             }
         } catch (RequestException $error) {
-            $error_data = json_decode($error->getResponse()->getBody(), true);
-            throw new RuntimeError("Failed to create couchdb database. Reason: " . $error_data['reason']);
+            $errorData = json_decode($error->getResponse()->getBody(), true);
+            throw new RuntimeError("Failed to create couchdb database. Reason: " . $errorData['reason']);
         }
 
-        if ($update_views) {
-            $this->updateDesignDoc($migration_target);
+        if ($updateViews) {
+            $this->updateDesignDoc($migrationTarget);
         }
     }
 
-    protected function deleteDatabase(MigrationTargetInterface $migration_target)
+    protected function deleteDatabase(MigrationTargetInterface $migrationTarget)
     {
-        if ($this->databaseExists($migration_target)) {
-            $client = $this->getConnection($migration_target);
-            $database_name = $this->getDatabaseName($migration_target);
-            $response = $client->delete('/' . $database_name);
+        if ($this->databaseExists($migrationTarget)) {
+            $client = $this->getConnection($migrationTarget);
+            $databaseName = $this->getDatabaseName($migrationTarget);
+            $response = $client->delete('/' . $databaseName);
             if ($response->getStatusCode() !== 200) {
                 throw new RuntimeError(
                     'Failed to delete couchdb database %s. Received status %s along with this data: %s',
-                    $database_name,
+                    $databaseName,
                     $response->getStatusCode(),
                     print_r(json_decode($response->getBody(), true), true)
                 );
@@ -67,94 +67,94 @@ abstract class CouchDbMigration extends Migration
         }
     }
 
-    protected function getDatabaseName(MigrationTargetInterface $migration_target)
+    protected function getDatabaseName(MigrationTargetInterface $migrationTarget)
     {
-        $connector = $migration_target->getTargetConnector();
-        $connector_config = $connector->getConfig();
+        $connector = $migrationTarget->getTargetConnector();
+        $connectorConfig = $connector->getConfig();
 
-        return $connector_config->get('database');
+        return $connectorConfig->get('database');
     }
 
-    protected function updateDesignDoc(MigrationTargetInterface $migration_target)
+    protected function updateDesignDoc(MigrationTargetInterface $migrationTarget)
     {
-        $views_directory = $this->getViewsDirectory();
-        if (!is_dir($views_directory)) {
-            throw new RuntimeError(sprintf('Given views directory "%s" does not exist.', $views_directory));
+        $viewsDirectory = $this->getViewsDirectory();
+        if (!is_dir($viewsDirectory)) {
+            throw new RuntimeError(sprintf('Given views directory "%s" does not exist.', $viewsDirectory));
         }
 
         $views = [];
-        $glob_expression = sprintf('%s/*.map.js', $views_directory);
-        foreach (glob($glob_expression) as $view_map_file) {
-            $reduce_function = '';
-            $map_function = file_get_contents($view_map_file);
-            $view_name = str_replace(self::MAP_FILE_SUFFIX, '', basename($view_map_file));
-            $views[$view_name] = [ 'map' => $map_function ];
+        $globExpression = sprintf('%s/*.map.js', $viewsDirectory);
+        foreach (glob($globExpression) as $viewMapFile) {
+            $reduceFunction = '';
+            $mapFunction = file_get_contents($viewMapFile);
+            $viewName = str_replace(self::MAP_FILE_SUFFIX, '', basename($viewMapFile));
+            $views[$viewName] = ['map' => $mapFunction];
 
-            $reduce_file_path = dirname($view_map_file) . DIRECTORY_SEPARATOR . $view_name . self::REDUCE_FILE_SUFFIX;
-            if (is_readable($reduce_file_path)) {
-                $views[$view_name]['reduce'] = file_get_contents($reduce_file_path);
+            $reduceFilePath = dirname($viewMapFile) . DIRECTORY_SEPARATOR . $viewName . self::REDUCE_FILE_SUFFIX;
+            if (is_readable($reduceFilePath)) {
+                $views[$viewName]['reduce'] = file_get_contents($reduceFilePath);
             }
         }
 
-        $client = $this->getConnection($migration_target);
-        $database_name = $this->getDatabaseName($migration_target);
-        $document_path = sprintf('/%s/_design/%s', $database_name, urlencode($this->getDesignDocName()));
+        $client = $this->getConnection($migrationTarget);
+        $databaseName = $this->getDatabaseName($migrationTarget);
+        $documentPath = sprintf('/%s/_design/%s', $databaseName, urlencode($this->getDesignDocName()));
 
         try {
-            $response = $client->get($document_path);
-            $design_doc = json_decode($response->getBody(), true);
+            $response = $client->get($documentPath);
+            $designDoc = json_decode($response->getBody(), true);
         } catch (RequestException $error) {
-            $error_data = json_decode($error->getResponse()->getBody(), true);
-            if ($error_data['error'] === 'not_found') {
-                $design_doc = [];
+            $errorData = json_decode($error->getResponse()->getBody(), true);
+            if ($errorData['error'] === 'not_found') {
+                $designDoc = [];
             } else {
                 throw $error;
             }
         }
 
         try {
-            if (!empty($design_doc)) {
-                $design_doc['views'] = $views;
-                $payload = $design_doc;
+            if (!empty($designDoc)) {
+                $designDoc['views'] = $views;
+                $payload = $designDoc;
             } else {
-                $payload = [ 'language' => 'javascript', 'views' => $views ];
+                $payload = ['language' => 'javascript', 'views' => $views];
             }
-            $client->put($document_path, [ 'body' => json_encode($payload) ]);
+            $client->put($documentPath, ['body' => json_encode($payload)]);
         } catch (RequestException $error) {
-            $error_data = json_decode($error->getResponse()->getBody(), true);
-            throw new RuntimeError("Failed to create/update couchdb design-doc. Reason: " . $error_data['reason']);
+            $errorData = json_decode($error->getResponse()->getBody(), true);
+            throw new RuntimeError("Failed to create/update couchdb design-doc. Reason: " . $errorData['reason']);
         }
     }
 
-    protected function deleteDesignDoc(MigrationTargetInterface $migration_target)
+    protected function deleteDesignDoc(MigrationTargetInterface $migrationTarget)
     {
-        $client = $this->getConnection($migration_target);
-        $database_name = $this->getDatabaseName($migration_target);
-        $document_path = sprintf('/%s/_design/%s', $database_name, urlencode($this->getDesignDocName()));
+        $client = $this->getConnection($migrationTarget);
+        $databaseName = $this->getDatabaseName($migrationTarget);
+        $documentPath = sprintf('/%s/_design/%s', $databaseName, urlencode($this->getDesignDocName()));
 
         try {
-            $response = $client->get($document_path);
-            $cur_document = json_decode($response->getBody(), true);
-            $client->delete(sprintf('%s?rev=%s', $document_path, $cur_document['_rev']));
+            $response = $client->get($documentPath);
+            $curDocument = json_decode($response->getBody(), true);
+            $client->delete(sprintf('%s?rev=%s', $documentPath, $curDocument['_rev']));
         } catch (RequestException $error) {
-            $error_data = json_decode($error->getResponse()->getBody(), true);
-            if ($error_data['error'] !== 'not_found') {
-                throw new RuntimeError("Failed to delete couchdb design-doc. Reason: " . $error_data['reason']);
+            $errorData = json_decode($error->getResponse()->getBody(), true);
+            if ($errorData['error'] !== 'not_found') {
+                throw new RuntimeError("Failed to delete couchdb design-doc. Reason: " . $errorData['reason']);
             }
         }
     }
 
-    protected function databaseExists(MigrationTargetInterface $migration_target)
+    protected function databaseExists(MigrationTargetInterface $migrationTarget)
     {
         try {
-            $database_name = $this->getDatabaseName($migration_target);
-            $client = $this->getConnection($migration_target);
+            $databaseName = $this->getDatabaseName($migrationTarget);
+            $client = $this->getConnection($migrationTarget);
 
-            $response = $client->get('/' . $database_name);
+            $response = $client->get('/' . $databaseName);
             return $response->getStatusCode() === 200;
         } catch (RequestException $error) {
-            $error_data = json_decode($error->getResponse()->getBody(), true);
-            if ($error_data['error'] === 'not_found') {
+            $errorData = json_decode($error->getResponse()->getBody(), true);
+            if ($errorData['error'] === 'not_found') {
                 return false;
             }
             throw $error;

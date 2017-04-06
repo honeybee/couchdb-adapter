@@ -19,10 +19,10 @@ abstract class CouchDbStorage extends Storage
 
     protected function request($identifier, $method, array $body = [], array $params = [])
     {
-        $allowed_methods = [ self::METHOD_GET, self::METHOD_POST, self::METHOD_PUT, self::METHOD_DELETE ];
-        if (!in_array($method, $allowed_methods)) {
+        $allowedMethods = [self::METHOD_GET, self::METHOD_POST, self::METHOD_PUT, self::METHOD_DELETE];
+        if (!in_array($method, $allowedMethods)) {
             throw new RuntimeError(
-                sprintf("Invalid method %s given. Expecting one of: ", $method, implode(', ', $allowed_methods))
+                sprintf("Invalid method %s given. Expecting one of: %s", $method, implode(', ', $allowedMethods))
             );
         }
 
@@ -32,22 +32,22 @@ abstract class CouchDbStorage extends Storage
 
         try {
             $client = $this->connector->getConnection();
-            $request_path = $this->buildRequestUrl($identifier, $params);
+            $requestPath = $this->buildRequestUrl($identifier, $params);
             if (empty($body)) {
-                $request = new Request($method, $request_path, [ 'Accept' => 'application/json' ]);
+                $request = new Request($method, $requestPath, ['Accept' => 'application/json']);
             } else {
                 $request = new Request(
                     $method,
-                    $request_path,
-                    [ 'Accept' => 'application/json', 'Content-Type' => 'application/json' ],
+                    $requestPath,
+                    ['Accept' => 'application/json', 'Content-Type' => 'application/json'],
                     json_encode($body)
                 );
             }
-        } catch (GuzzleException $guzzle_error) {
+        } catch (GuzzleException $guzzleError) {
             throw new RuntimeError(
-                sprintf('Failed to %s build request: %s', $method, $guzzle_error),
+                sprintf('Failed to %s build request: %s', $method, $guzzleError),
                 0,
-                $guzzle_error
+                $guzzleError
             );
         }
 
@@ -56,19 +56,19 @@ abstract class CouchDbStorage extends Storage
 
     protected function buildRequestUrl($identifier, array $params = [])
     {
-        $request_path = '/' . $this->getDatabase() . '/' . $identifier;
+        $requestPath = '/' . $this->getDatabase() . '/' . $identifier;
 
         if (!empty($params)) {
-            $request_path .= '?' . http_build_query($params);
+            $requestPath .= '?' . http_build_query($params);
         }
 
-        return str_replace('//', '/', $request_path);
+        return str_replace('//', '/', $requestPath);
     }
 
     protected function getDatabase()
     {
-        $fallback_index = $this->connector->getConfig()->get('database');
+        $fallbackIndex = $this->connector->getConfig()->get('database');
 
-        return $this->config->get('database', $fallback_index);
+        return $this->config->get('database', $fallbackIndex);
     }
 }
