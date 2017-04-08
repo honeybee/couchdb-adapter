@@ -34,7 +34,7 @@ class EventStreamAppenderTest extends TestCase
     {
         $streamAppender = new EventStreamAppender($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $streamAppender->delete('');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Assert\InvalidArgumentException
@@ -43,7 +43,7 @@ class EventStreamAppenderTest extends TestCase
     {
         $streamAppender = new EventStreamAppender($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $streamAppender->write('');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Honeybee\Common\Error\RuntimeError
@@ -64,7 +64,7 @@ class EventStreamAppenderTest extends TestCase
             new NullLogger
         );
         $streamAppender->write($mockDomainevent);
-    }
+    } //@codeCoverageIgnore
 
     public function testWrite()
     {

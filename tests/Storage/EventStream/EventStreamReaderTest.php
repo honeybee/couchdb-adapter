@@ -4,9 +4,11 @@ namespace Honeybee\Tests\CouchDb\Storage\EventStream;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
 use Honeybee\CouchDb\Connector\CouchDbConnector;
 use Honeybee\CouchDb\Storage\EventStream\EventStreamReader;
 use Honeybee\Infrastructure\Config\ArrayConfig;
+use Honeybee\Infrastructure\Config\Settings;
 use Honeybee\Infrastructure\DataAccess\Storage\StorageReaderIterator;
 use Honeybee\Model\Event\AggregateRootEventList;
 use Honeybee\Model\Event\EventStream;
@@ -14,8 +16,6 @@ use Honeybee\Tests\CouchDb\TestCase;
 use Mockery;
 use Psr\Log\NullLogger;
 use Psr\Http\Message\RequestInterface;
-use GuzzleHttp\Psr7\Request;
-use Honeybee\Infrastructure\Config\Settings;
 
 class EventStreamReaderTest extends TestCase
 {
@@ -51,7 +51,7 @@ class EventStreamReaderTest extends TestCase
     {
         $eventReader = new EventStreamReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read('');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Assert\InvalidArgumentException
@@ -60,7 +60,7 @@ class EventStreamReaderTest extends TestCase
     {
         $eventReader = new EventStreamReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read(['test_id']);
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Honeybee\Common\Error\RuntimeError
@@ -69,7 +69,7 @@ class EventStreamReaderTest extends TestCase
     {
         $eventReader = new EventStreamReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException GuzzleHttp\Exception\RequestException
@@ -89,7 +89,7 @@ class EventStreamReaderTest extends TestCase
         );
 
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     public function testReadRequestException404()
     {
@@ -133,7 +133,7 @@ class EventStreamReaderTest extends TestCase
         );
 
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     public function testReadEmpty()
     {
@@ -189,7 +189,7 @@ class EventStreamReaderTest extends TestCase
         );
 
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     public function testRead()
     {
@@ -249,7 +249,7 @@ class EventStreamReaderTest extends TestCase
             new NullLogger
         );
         $eventReader->readAll();
-    }
+    } //@codeCoverageIgnore
 
     public function testReadAll()
     {

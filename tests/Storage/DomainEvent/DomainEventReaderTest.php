@@ -49,7 +49,7 @@ class DomainEventReaderTest extends TestCase
     {
         $eventReader = new DomainEventReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read('');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Assert\InvalidArgumentException
@@ -58,7 +58,7 @@ class DomainEventReaderTest extends TestCase
     {
         $eventReader = new DomainEventReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read(['test_id']);
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Assert\InvalidArgumentException
@@ -69,7 +69,7 @@ class DomainEventReaderTest extends TestCase
         $this->mockConnector->shouldReceive('getConfig')->once()->withNoArgs()->andReturn(new ArrayConfig([]));
         $eventReader = new DomainEventReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Honeybee\Common\Error\RuntimeError
@@ -80,7 +80,7 @@ class DomainEventReaderTest extends TestCase
         $this->mockConnector->shouldReceive('getConnection')->andThrow($mockException);
         $eventReader = new DomainEventReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException GuzzleHttp\Exception\RequestException
@@ -100,7 +100,7 @@ class DomainEventReaderTest extends TestCase
             new NullLogger
         );
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     public function testReadRequestException404()
     {
@@ -143,7 +143,7 @@ class DomainEventReaderTest extends TestCase
         );
 
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Honeybee\Common\Error\RuntimeError
@@ -165,7 +165,7 @@ class DomainEventReaderTest extends TestCase
         $eventReader = new DomainEventReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
 
         $eventReader->read('test_id');
-    }
+    } //@codeCoverageIgnore
 
     public function testRead()
     {
@@ -199,7 +199,7 @@ class DomainEventReaderTest extends TestCase
     {
         $eventReader = new DomainEventReader($this->mockConnector, new ArrayConfig([]), new NullLogger);
         $eventReader->readAll();
-    }
+    } //@codeCoverageIgnore
 
     /**
      * @expectedException Honeybee\Common\Error\RuntimeError
@@ -227,7 +227,7 @@ class DomainEventReaderTest extends TestCase
             new NullLogger
         );
         $eventReader->readAll();
-    }
+    } //@codeCoverageIgnore
 
     public function testReadAllUsingLastKey()
     {

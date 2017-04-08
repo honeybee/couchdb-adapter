@@ -4,6 +4,9 @@ namespace Honeybee\Tests\CouchDb\Storage\EventStream;
 
 use Honeybee\Model\Event\AggregateRootEventInterface;
 
+/**
+ * @codeCoverageIgnore
+ */
 class MockEvent implements AggregateRootEventInterface
 {
     public function getUuid()
