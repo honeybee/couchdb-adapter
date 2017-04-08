@@ -2,6 +2,7 @@
 
 namespace Honeybee\CouchDb\Storage;
 
+use Assert\Assertion;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use Honeybee\Common\Error\RuntimeError;
@@ -45,7 +46,7 @@ abstract class CouchDbStorage extends Storage
             }
         } catch (GuzzleException $guzzleError) {
             throw new RuntimeError(
-                sprintf('Failed to %s build request: %s', $method, $guzzleError),
+                sprintf('Failed to build "%s" request: %s', $method, $guzzleError),
                 0,
                 $guzzleError
             );
@@ -67,8 +68,12 @@ abstract class CouchDbStorage extends Storage
 
     protected function getDatabase()
     {
-        $fallbackIndex = $this->connector->getConfig()->get('database');
+        $fallbackDatabase = $this->connector->getConfig()->get('database');
+        $database = $this->config->get('database', $fallbackDatabase);
 
-        return $this->config->get('database', $fallbackIndex);
+        Assertion::string($database);
+        Assertion::notBlank($database);
+
+        return $database;
     }
 }

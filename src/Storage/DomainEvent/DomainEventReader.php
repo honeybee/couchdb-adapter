@@ -2,6 +2,7 @@
 
 namespace Honeybee\CouchDb\Storage\DomainEvent;
 
+use Assert\Assertion;
 use GuzzleHttp\Exception\RequestException;
 use Honeybee\Common\Error\RuntimeError;
 use Honeybee\CouchDb\Storage\CouchDbStorage;
@@ -16,6 +17,9 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
 
     public function read($identifier, SettingsInterface $settings = null)
     {
+        Assertion::string($identifier);
+        Assertion::notBlank($identifier);
+
         try {
             $path = sprintf('/%s', $identifier);
             $response = $this->request($path, self::METHOD_GET);
@@ -26,6 +30,10 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
             } else {
                 throw $error;
             }
+        }
+
+        if (!isset($resultData['doc'])) {
+            throw new RuntimeError(sprintf('Invalid doc response from CouchDB: %s', var_export($resultData, true)));
         }
 
         return $this->createDomainEvent($resultData['doc']);
@@ -52,17 +60,24 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
 
         if (!$this->config->has('design_doc')) {
             throw new RuntimeError(
-                'Missing setting for "design_doc" that holds the name of the couchdb design document, ' .
+                'Missing setting for "design_doc" that holds the name of the CouchDB design document, ' .
                 'that is expected to contain the event_stream view.'
             );
         }
+
         $viewPath = sprintf(
             '/_design/%s/_view/%s',
             $this->config->get('design_doc'),
             $this->config->get('view_name', 'events_by_timestamp')
         );
+
+        // @todo catch RequestException?
         $response = $this->request($viewPath, self::METHOD_GET, [], $viewParams);
         $resultData = json_decode($response->getBody(), true);
+
+        if (!isset($resultData['rows'])) {
+            throw new RuntimeError(sprintf('Invalid rows response from CouchDb: %s', var_export($resultData, true)));
+        }
 
         $events = [];
         foreach ($resultData['rows'] as $eventData) {
@@ -81,7 +96,7 @@ class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
     protected function createDomainEvent(array $eventData)
     {
         if (!isset($eventData[self::OBJECT_TYPE])) {
-            throw new RuntimeError('Missing type key within event data.');
+            throw new RuntimeError('Missing object type key within event data.');
         }
 
         return new $eventData[self::OBJECT_TYPE]($eventData);

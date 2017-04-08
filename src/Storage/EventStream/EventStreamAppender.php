@@ -2,6 +2,7 @@
 
 namespace Honeybee\CouchDb\Storage\EventStream;
 
+use Assert\Assertion;
 use Honeybee\Common\Error\RuntimeError;
 use Honeybee\CouchDb\Storage\CouchDbStorage;
 use Honeybee\Model\Event\AggregateRootEventInterface;
@@ -12,15 +13,7 @@ class EventStreamAppender extends CouchDbStorage implements StorageWriterInterfa
 {
     public function write($domainEvent, SettingsInterface $settings = null)
     {
-        if (!$domainEvent instanceof AggregateRootEventInterface) {
-            throw new RuntimeError(
-                sprintf(
-                    'Invalid payload given to %s, expected type of %s',
-                    __METHOD__,
-                    AggregateRootEventInterface::CLASS
-                )
-            );
-        }
+        Assertion::isInstanceOf($domainEvent, AggregateRootEventInterface::CLASS);
 
         $data = $domainEvent->toArray();
         $identifier = sprintf('%s-%s', $domainEvent->getAggregateRootIdentifier(), $domainEvent->getSeqNumber());
@@ -28,12 +21,12 @@ class EventStreamAppender extends CouchDbStorage implements StorageWriterInterfa
         $responseData = json_decode($response->getBody(), true);
 
         if (!isset($responseData['ok']) || !isset($responseData['rev'])) {
-            throw new RuntimeError("Failed to write data.");
+            throw new RuntimeError('Failed to write data.');
         }
     }
 
     public function delete($identifier, SettingsInterface $settings = null)
     {
-        throw new RuntimeError("Deleting domain events from the stream is not allowed!");
+        throw new RuntimeError('Deleting domain events from the stream is not allowed!');
     }
 }
