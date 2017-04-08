@@ -1,5 +1,5 @@
 {
-    "name": "honeybee/couchdb",
+    "name": "honeybee/couchdb-adapter",
     "type": "library",
     "description": "CouchDB 1.x adapter for Honeybee.",
     "keywords": [ "honeybee", "couchdb", "adapter" ],
