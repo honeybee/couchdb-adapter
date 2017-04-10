@@ -13,7 +13,7 @@ use Honeybee\Infrastructure\DataAccess\Storage\StorageReaderIterator;
 
 class DomainEventReader extends CouchDbStorage implements StorageReaderInterface
 {
-    protected $lastKey = null;
+    protected $lastKey;
 
     public function read($identifier, SettingsInterface $settings = null)
     {

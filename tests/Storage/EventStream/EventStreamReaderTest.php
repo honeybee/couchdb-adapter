@@ -33,15 +33,16 @@ class EventStreamReaderTest extends TestCase
         $this->mockResponse = Mockery::mock(Response::CLASS);
     }
 
-
     public function testGetIterator()
     {
         $stubbedEventReader = Mockery::mock(
             EventStreamReader::CLASS.'[readAll]',
             [$this->mockConnector, new ArrayConfig([]), new NullLogger]
         );
-        $stubbedEventReader->shouldReceive('readAll')->once()->andReturn([]);
-        $this->assertInstanceOf(StorageReaderIterator::CLASS, $stubbedEventReader->getIterator());
+        $stubbedEventReader->shouldReceive('readAll')->once()->andReturn(['something']);
+        $iterator = $stubbedEventReader->getIterator();
+        $this->assertInstanceOf(StorageReaderIterator::CLASS, $iterator);
+        $this->assertTrue($iterator->valid());
     }
 
     /**

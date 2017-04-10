@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "503295a82897a876c2cf6e222276704c",
+    "content-hash": "1547442acb4d58affff14040c9d90a10",
     "packages": [
         {
             "name": "beberlei/assert",
@@ -1140,16 +1140,16 @@
         },
         {
             "name": "rdlowrey/auryn",
-            "version": "v1.4.0",
+            "version": "v1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rdlowrey/auryn.git",
-                "reference": "2e4240791162dfe073d59654d8dc06df0eb0b73f"
+                "reference": "c6c92ec081c707f7e9e0a69185665147b30d66de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rdlowrey/auryn/zipball/2e4240791162dfe073d59654d8dc06df0eb0b73f",
-                "reference": "2e4240791162dfe073d59654d8dc06df0eb0b73f",
+                "url": "https://api.github.com/repos/rdlowrey/auryn/zipball/c6c92ec081c707f7e9e0a69185665147b30d66de",
+                "reference": "c6c92ec081c707f7e9e0a69185665147b30d66de",
                 "shasum": ""
             },
             "require": {
@@ -1197,7 +1197,7 @@
                 "dic",
                 "ioc"
             ],
-            "time": "2016-03-14T20:10:19+00:00"
+            "time": "2017-04-07T16:12:28+00:00"
         },
         {
             "name": "roave/security-advisories",

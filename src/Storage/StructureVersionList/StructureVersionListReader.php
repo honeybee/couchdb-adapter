@@ -2,7 +2,9 @@
 
 namespace Honeybee\CouchDb\Storage\StructureVersionList;
 
+use Assert\Assertion;
 use GuzzleHttp\Exception\RequestException;
+use Honeybee\Common\Error\RuntimeError;
 use Honeybee\CouchDb\Storage\CouchDbStorage;
 use Honeybee\Infrastructure\DataAccess\Storage\StorageReaderInterface;
 use Honeybee\Infrastructure\Config\Settings;
@@ -15,7 +17,28 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
 {
     const READ_ALL_LIMIT = 10;
 
-    protected $nextStartKey = null;
+    protected $lastKey;
+
+    public function read($identifier, SettingsInterface $settings = null)
+    {
+        Assertion::string($identifier);
+        Assertion::notBlank($identifier);
+
+        try {
+            $response = $this->request($identifier, self::METHOD_GET);
+            $resultData = json_decode($response->getBody(), true);
+        } catch (RequestException $error) {
+            if ($error->getResponse()->getStatusCode() === 404) {
+                return null;
+            } else {
+                throw $error;
+            }
+        }
+
+        $resultData['revision'] = $resultData['_rev'];
+
+        return $this->createStructureVersionList($resultData['_id'], $resultData['versions']);
+    }
 
     public function readAll(SettingsInterface $settings = null)
     {
@@ -30,47 +53,34 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
         ];
 
         if (!$settings->get('first', true)) {
-            if (!$this->nextStartKey) {
+            if (!$this->lastKey) {
                 return $data;
             }
 
-            $requestParams['startkey'] = sprintf('"%s"', $this->nextStartKey);
             $requestParams['skip'] = 1;
+            $requestParams['startkey'] = sprintf('"%s"', $this->lastKey);
         }
 
+        // @todo catch RequestException?
         $response = $this->request('_all_docs', self::METHOD_GET, [], $requestParams);
         $resultData = json_decode($response->getBody(), true);
 
+        if (!isset($resultData['rows'])) {
+            throw new RuntimeError(sprintf('Invalid rows response from CouchDb: %s', var_export($resultData, true)));
+        }
+
         foreach ($resultData['rows'] as $row) {
-            $data[] = $this->createStructureVersionList($row);
+            $data[] = $this->createStructureVersionList($row['_id'], $row['versions']);
         }
 
         if ($resultData['total_rows'] === $resultData['offset'] + 1) {
-            $this->nextStartKey = null;
+            $this->lastKey = null;
         } else {
             $lastRow = end($data);
-            $this->nextStartKey = $lastRow[self::DOMAIN_FIELD_ID];
+            $this->lastKey = $lastRow->getIdentifier();
         }
 
         return $data;
-    }
-
-    public function read($identifier, SettingsInterface $settings = null)
-    {
-        try {
-            $response = $this->request($identifier, self::METHOD_GET);
-            $resultData = json_decode($response->getBody(), true);
-        } catch (RequestException $error) {
-            if ($error->getResponse()->getStatusCode() === 404) {
-                return null;
-            } else {
-                throw $error;
-            }
-        }
-
-        $resultData['revision'] = $resultData['_rev'];
-
-        return $this->createStructureVersionList($resultData);
     }
 
     public function getIterator()
@@ -78,14 +88,13 @@ class StructureVersionListReader extends CouchDbStorage implements StorageReader
         return new StorageReaderIterator($this);
     }
 
-    protected function createStructureVersionList(array $data)
+    protected function createStructureVersionList($identifier, array $versions)
     {
-        $structureVersionList = new StructureVersionList($data['_id']);
-
-        foreach ($data['versions'] as $versionData) {
-            $structureVersionList->push(new StructureVersion($versionData));
+        $structureVersions = [];
+        foreach ($versions as $version) {
+            $structureVersions[] = new StructureVersion($version);
         }
 
-        return $structureVersionList;
+        return new StructureVersionList($identifier, $structureVersions);
     }
 }
